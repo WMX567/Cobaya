@@ -11,7 +11,7 @@ Use your existing conda environment:
 conda activate nanogpt
 python -m pip install -r emulator_bridge/requirements.txt
 bash emulator_bridge/install_data_carc.sh
-python -m cobaya install polychord -p emulator_bridge/packages --no-set-global
+bash emulator_bridge/install_polychord_carc.sh
 ```
 
 Keep the `Emulator` project next to this repository, or set `EMULATOR_DIR` to its
