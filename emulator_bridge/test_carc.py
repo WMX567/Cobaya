@@ -38,7 +38,7 @@ def test_slurm_notice_requeues_and_resumes_but_cancel_does_not(tmp_path):
     scontrol.write_text('#!/usr/bin/env bash\nprintf "%s\\n" "$*" >> "$MOCK_REQUEUES"\n')
     scontrol.chmod(0o755)
     requeues = tmp_path / "requeues"
-    environment = {**os.environ, "COBAYA_DIR": str(tmp_path), "COBAYA_PYTHON": sys.executable,
+    environment = {**os.environ, "COBAYA_SAMPLER": "mcmc", "COBAYA_DIR": str(tmp_path), "COBAYA_PYTHON": sys.executable,
                    "PYTHONPATH": str(ROOT), "SLURM_JOB_ID": "12345", "SLURM_NTASKS": "1",
                    "SLURM_RESTART_COUNT": "0", "COBAYA_AUTO_REQUEUE": "1",
                    "MOCK_REQUEUES": str(requeues), "PATH": f"{binary}:{os.environ['PATH']}"}
@@ -76,7 +76,7 @@ def test_submission_helper_forwards_options_for_all_datasets(tmp_path):
     sbatch.write_text('#!/usr/bin/env bash\nprintf "%s\\n" "$*" >> "$MOCK_SUBMISSIONS"\necho 12345\n')
     sbatch.chmod(0o755)
     record = tmp_path / "submissions"
-    environment = {**os.environ, "COBAYA_DIR": str(tmp_path), "MOCK_SUBMISSIONS": str(record),
+    environment = {**os.environ, "COBAYA_SAMPLER": "mcmc", "COBAYA_DIR": str(tmp_path), "MOCK_SUBMISSIONS": str(record),
                    "PATH": f"{binary}:{os.environ['PATH']}"}
     subprocess.run(["bash", str(ROOT / "emulator_bridge/submit_carc.sh"), "all",
                     "--account=test-account", "--time=01:00:00"],
@@ -102,7 +102,7 @@ def test_submission_helper_uses_submission_directory_from_spool(tmp_path):
     sbatch = binary / "sbatch"
     sbatch.write_text('#!/usr/bin/env bash\nprintf "%s\\n" "$@"\n')
     sbatch.chmod(0o755)
-    environment = {**os.environ, "SLURM_SUBMIT_DIR": str(project),
+    environment = {**os.environ, "COBAYA_SAMPLER": "mcmc", "SLURM_SUBMIT_DIR": str(project),
                    "PATH": f"{binary}:{os.environ['PATH']}"}
     environment.pop("COBAYA_DIR", None)
     result = subprocess.run(["bash", str(copied), "planck"], cwd=spool,
@@ -122,7 +122,7 @@ def test_batch_scripts_use_submission_directory_when_copied_to_spool(tmp_path):
     python = tmp_path / "mock-python"
     python.write_text('#!/usr/bin/env bash\nprintf "%s\\n" "$@"\n')
     python.chmod(0o755)
-    environment = {**os.environ, "SLURM_SUBMIT_DIR": str(project),
+    environment = {**os.environ, "COBAYA_SAMPLER": "mcmc", "SLURM_SUBMIT_DIR": str(project),
                    "COBAYA_PYTHON": str(python), "SLURM_NTASKS": "1"}
     for key in ("COBAYA_DIR", "COBAYA_PACKAGES_PATH", "COBAYA_CHAINS_DIR"):
         environment.pop(key, None)

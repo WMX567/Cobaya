@@ -1,4 +1,4 @@
-"""Generate Planck, ACT, and joint evaluate/minimize/MCMC input files."""
+"""Generate Planck, ACT, and joint evaluate/minimize/MCMC/PolyChord input files."""
 
 from pathlib import Path
 
@@ -37,12 +37,16 @@ def make_configs():
         if dataset != "planck":
             parameters["A_act"] = {"prior": {"min": 0.5, "max": 1.5}, "ref": 1.0, "proposal": 0.003}
             parameters["P_act"] = {"prior": {"min": 0.9, "max": 1.1}, "ref": 1.0, "proposal": 0.003}
-        for mode in ("evaluate", "minimize", "mcmc"):
+        for mode in ("evaluate", "minimize", "mcmc", "polychord"):
             sampler = {"evaluate": {"N": 1}} if mode == "evaluate" else (
                 {"minimize": {"method": "bobyqa", "best_of": 1, "max_evals": 500,
                               "seed": 42}} if mode == "minimize" else
                 {"mcmc": {"burn_in": 500, "Rminus1_stop": 0.01,
                           "Rminus1_cl_stop": 0.2, "max_tries": "100d", "seed": 42}})
+            if mode == "polychord":
+                sampler = {"polychord": {"nlive": "50d", "num_repeats": "5d",
+                    "precision_criterion": 0.001, "do_clustering": True,
+                    "cluster_posteriors": True, "boost_posterior": 5, "seed": 42}}
             info = {"packages_path": "emulator_bridge/packages", "stop_at_error": True,
                     "theory": {"emulator_bridge.theory.SegmentedEmulator": {
                         "emulator_path": "../Emulator", "models_path": "emulator_bridge/models",

@@ -19,6 +19,16 @@ params:
   N_ur: 2.0328
   log10_G_eff_nu: -5.0
   A_planck: 1.0
+# sampler:
+#   evaluate: null
 sampler:
-  evaluate: null
+  polychord:
+    nlive: 50d              # 50 times the number of sampled parameters
+    num_repeats: 5d         # Slice-sampling steps per dimension; check convergence
+    precision_criterion: 0.001
+    do_clustering: true     # what separates and tracks distinct modes
+    cluster_posteriors: true  # writes a separate chain per mode
+    boost_posterior: 5      # more posterior samples for smoother plots
+    seed: 42
+    # callback_function is supported; callback_every is not a PolyChord option.
 output: emulator_bridge/chains/evaluate
