@@ -14,6 +14,9 @@ bash emulator_bridge/install_data_carc.sh
 bash emulator_bridge/install_polychord_carc.sh
 ```
 
+The PolyChord installer builds a serial version for the single-process jobs.
+It requires GCC, G++, GFortran, and Make; OpenMPI is not required.
+
 Keep the `Emulator` project next to this repository, or set `EMULATOR_DIR` to its
 absolute path for CARC jobs.
 

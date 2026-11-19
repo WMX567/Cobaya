@@ -33,6 +33,7 @@ export OMP_NUM_THREADS="${SLURM_CPUS_PER_TASK:-4}"
 export MKL_NUM_THREADS="$OMP_NUM_THREADS"
 export OPENBLAS_NUM_THREADS="$OMP_NUM_THREADS"
 export NUMEXPR_NUM_THREADS="$OMP_NUM_THREADS"
+export COBAYA_NOMPI=1
 export PYTHONUNBUFFERED=1
 export PYTHONFAULTHANDLER=1
 # PolyChord uses native resume files, not the MCMC checkpoint/signal callback.

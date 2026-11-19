@@ -9,7 +9,7 @@
 # Usage from the repository root:
 #   bash emulator_bridge/install_polychord_carc.sh
 #   sbatch --account=YOUR_ACCOUNT emulator_bridge/install_polychord_carc.sh
-# Load your compatible compiler/MPI modules before submitting, if needed.
+# Builds without MPI for the single-process sampling workflow. Load GCC if needed.
 set -eo pipefail
 
 PROJECT_DIR="${COBAYA_DIR:-${SLURM_SUBMIT_DIR:-}}"
@@ -49,45 +49,47 @@ install_polychord() {
     "$ENV_PYTHON" --version
     echo "Packages: $PACKAGES"
     echo "Log: $LOG"
-    # Conda/modules may export FC=gfortran. MPI builds require wrappers instead.
-    export CC="${POLYCHORD_CC:-mpicc}"
-    export CXX="${POLYCHORD_CXX:-mpicxx}"
-    if [[ -n "${POLYCHORD_FC:-}" ]]; then
-        export FC="$POLYCHORD_FC"
-    elif command -v mpif90 >/dev/null 2>&1; then
-        export FC=mpif90
-    else
-        export FC=mpifort
-    fi
+    # Ignore inherited MPI compiler wrappers: this workflow uses one process.
+    export CC="${POLYCHORD_CC:-gcc}"
+    export CXX="${POLYCHORD_CXX:-g++}"
+    export FC="${POLYCHORD_FC:-gfortran}"
+    export COBAYA_NOMPI=1
     for compiler in make "$CC" "$CXX" "$FC"; do
         if ! command -v "$compiler"; then
-            echo "Missing $compiler. Load compatible compiler and MPI modules, then retry." >&2
-            echo "Discover available modules with: module avail gcc; module avail openmpi" >&2
+            echo "Missing $compiler. Load a GCC module, then retry (module avail gcc)." >&2
             return 2
         fi
     done
-    echo "Build compilers: CC=$CC CXX=$CXX FC=$FC"
-    # Compile and link without launching an MPI process on the login node.
-    local probe_dir
-    probe_dir="$(mktemp -d "${TMPDIR:-/tmp}/polychord-mpi.XXXXXX")" || return 2
-    cat > "$probe_dir/check.f90" <<'EOF'
-program check_mpi
-  implicit none
-  include 'mpif.h'
-  integer ierr
-  call MPI_Init(ierr)
-  call MPI_Finalize(ierr)
-end program check_mpi
-EOF
-    if ! "$FC" "$probe_dir/check.f90" -o "$probe_dir/check_mpi"; then
-        echo "MPI Fortran compile/link check failed. Load compatible GCC and MPI modules, then retry." >&2
-        return 2
-    fi
-    "$ENV_PYTHON" -u -m cobaya install polychord \
-        -p "$PACKAGES" --no-set-global "$@" || return "$?"
+    echo "Building serial PolyChord: CC=$CC CXX=$CXX FC=$FC"
+    "$ENV_PYTHON" -u - "$PACKAGES" <<'PYBUILD'
+import os
+from pathlib import Path
+import subprocess
+import sys
+
+from cobaya.install import download_github_release
+from cobaya.log import logger_setup
+from cobaya.samplers.polychord import polychord
+
+logger_setup()
+packages = Path(sys.argv[1]).resolve()
+source = Path(polychord.get_path(str(packages)))
+# Match the release required by this checkout and avoid reusing MPI build objects.
+if not download_github_release(str(packages / "code"),
+                               polychord._pc_repo_name, polychord._pc_repo_version):
+    raise SystemExit("PolyChord download failed")
+env = dict(os.environ, PWD=str(source))
+subprocess.check_call([sys.executable, "setup.py", "--no-mpi", "clean", "--all"],
+                      cwd=source, env=env)
+subprocess.check_call([sys.executable, "setup.py", "--no-mpi", "build"],
+                      cwd=source, env=env)
+PYBUILD
+    local build_status=$?
+    if [[ "$build_status" != 0 ]]; then return "$build_status"; fi
     "$ENV_PYTHON" -u -m cobaya install polychord \
         -p "$PACKAGES" --no-set-global --test || return "$?"
-    echo "PolyChord installation verified. Use the same compiler/MPI modules for sampling jobs."
+    echo "Serial PolyChord installation verified. No OpenMPI runtime is required."
+
 }
 
-install_polychord "$@" 2>&1 | tee "$LOG"
+install_polychord 2>&1 | tee "$LOG"
