@@ -1,0 +1,6 @@
+models/
+packages/
+chains/
+logs/
+comparison*.json
+__pycache__/

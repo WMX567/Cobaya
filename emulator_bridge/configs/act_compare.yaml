@@ -1,0 +1,6 @@
+packages_path: emulator_bridge/packages
+likelihood:
+  emulator_bridge.act.ACTDR6: null
+params:
+  A_act: 1.0
+  P_act: 1.0

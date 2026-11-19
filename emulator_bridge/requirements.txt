@@ -1,0 +1,4 @@
+-e .
+torch>=2.6
+pytest>=8
+ACT-DR6-CMBonly @ git+https://github.com/ACTCollaboration/DR6-ACT-lite.git@627aeafb88ae5ad1aa66b406bea2d65cfa66a27d

@@ -1,0 +1,6 @@
+# High-ell Planck 2018 TT/TE/EE, foreground-marginalized native likelihood.
+# Both spectra use the same fixed calibration. This is not a full Planck analysis.
+likelihood:
+  planck_2018_highl_plik.TTTEEE_lite_native: null
+params:
+  A_planck: 1.0

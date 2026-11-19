@@ -1,0 +1,24 @@
+# Run from the Cobaya repository root: python -m cobaya run emulator_bridge/evaluate.yaml
+theory:
+  emulator_bridge.theory.SegmentedEmulator:
+    # Paths below are relative to the working directory. Adapt for cluster use.
+    emulator_path: ../Emulator
+    models_path: emulator_bridge/models
+    device: cpu
+likelihood:
+  planck_2018_highl_plik.TTTEEE_lite_native: null
+# One example point within the CosmoCLASS LHS ranges. Replace with your test point.
+params:
+  omega_b: 0.02237
+  omega_cdm: 0.12
+  h: 0.674
+  tau_reio: 0.0544
+  n_s: 0.965
+  m_ncdm: 0.06
+  ln_A_s_1e10: 3.044
+  N_ur: 2.0328
+  log10_G_eff_nu: -5.0
+  A_planck: 1.0
+sampler:
+  evaluate: null
+output: emulator_bridge/chains/evaluate
