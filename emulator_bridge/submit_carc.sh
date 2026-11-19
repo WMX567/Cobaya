@@ -2,11 +2,15 @@
 # Usage: bash emulator_bridge/submit_carc.sh [planck|act|act_planck|all] [sbatch options...]
 set -euo pipefail
 export COBAYA_SAMPLER="${COBAYA_SAMPLER:-polychord}"
-export COBAYA_CONDA_ENV="${COBAYA_CONDA_ENV:-nanoGPT}"
+export COBAYA_CONDA_ENV="${COBAYA_CONDA_ENV:-nanogpt}"
 # This helper may itself be submitted with sbatch, which copies it to spool.
 PROJECT_DIR="${COBAYA_DIR:-${SLURM_SUBMIT_DIR:-}}"
 if [[ -z "$PROJECT_DIR" ]]; then
     PROJECT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
+fi
+# Accept submission from either the repository root or emulator_bridge.
+if [[ -d "$PROJECT_DIR/configs" && -f "$PROJECT_DIR/../cobaya/__init__.py" ]]; then
+    PROJECT_DIR="$(cd -- "$PROJECT_DIR/.." && pwd)"
 fi
 export COBAYA_DIR="$PROJECT_DIR"
 COBAYA_DIR="$(cd -- "$COBAYA_DIR" && pwd)"

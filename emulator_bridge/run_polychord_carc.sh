@@ -12,6 +12,10 @@ PROJECT_DIR="${COBAYA_DIR:-${SLURM_SUBMIT_DIR:-}}"
 if [[ -z "$PROJECT_DIR" ]]; then
     PROJECT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
 fi
+# Accept submission from either the repository root or emulator_bridge.
+if [[ -d "$PROJECT_DIR/configs" && -f "$PROJECT_DIR/../cobaya/__init__.py" ]]; then
+    PROJECT_DIR="$(cd -- "$PROJECT_DIR/.." && pwd)"
+fi
 cd -- "$PROJECT_DIR"
 if [[ "${SLURM_NTASKS:-1}" != 1 ]]; then
     echo "This script requires --ntasks=1." >&2
@@ -21,7 +25,7 @@ if [[ -n "${COBAYA_PYTHON:-}" ]]; then
     ENV_PYTHON="$COBAYA_PYTHON"
 else
     source "${CONDA_SH:-$(conda info --base)/etc/profile.d/conda.sh}"
-    conda activate "${COBAYA_CONDA_ENV:-nanoGPT}"
+    conda activate "${COBAYA_CONDA_ENV:-nanogpt}"
     ENV_PYTHON="$CONDA_PREFIX/bin/python"
 fi
 set -u

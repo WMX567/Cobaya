@@ -25,6 +25,10 @@ PROJECT_DIR="${COBAYA_DIR:-${SLURM_SUBMIT_DIR:-}}"
 if [[ -z "$PROJECT_DIR" ]]; then
     PROJECT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
 fi
+# Accept submission from either the repository root or emulator_bridge.
+if [[ -d "$PROJECT_DIR/configs" && -f "$PROJECT_DIR/../cobaya/__init__.py" ]]; then
+    PROJECT_DIR="$(cd -- "$PROJECT_DIR/.." && pwd)"
+fi
 cd -- "$PROJECT_DIR"
 PROJECT_DIR="$PWD"
 if [[ ! -d "$PROJECT_DIR/emulator_bridge/configs" ]]; then

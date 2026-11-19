@@ -8,7 +8,7 @@ likelihoods. Run all commands from this repository root.
 Use your existing conda environment:
 
 ```bash
-conda activate nanoGPT
+conda activate nanogpt
 python -m pip install -r emulator_bridge/requirements.txt
 bash emulator_bridge/install_data_carc.sh
 python -m cobaya install polychord -p emulator_bridge/packages --no-set-global
@@ -69,15 +69,14 @@ PolyChord settings too if you regenerate them.
 
 ```bash
 # Run from the repository root. Submits all three datasets with PolyChord.
-sbatch submit_carc.sh all
+sbatch emulator_bridge/submit_carc.sh all
 # If CARC requires an explicit allocation account:
-# sbatch --account=YOUR_CARC_ACCOUNT submit_carc.sh all
+# sbatch --account=YOUR_CARC_ACCOUNT emulator_bridge/submit_carc.sh all
 ```
 
-The launcher selects `polychord` and defaults to the `nanoGPT` environment.
-It submits three independent jobs: Planck, ACT, and ACT + Planck. Its short
-5-minute allocation is only for submission; each sampling job has a 10-hour
-limit. The launcher's allocation account is forwarded to the sampling jobs.
+The helper defaults to `polychord` and the `nanogpt` environment.
+It submits three independent jobs: Planck, ACT, and ACT + Planck, each with a
+10-hour limit. The launcher's allocation account is forwarded to the sampling jobs.
 Set `COBAYA_MODELS` first if your weights are outside `emulator_bridge/models`.
 To submit only one dataset, replace `all` with `planck`, `act`, or `act_planck`.
 
@@ -106,7 +105,7 @@ requeue when permitted by CARC.
 ## Check before sampling
 
 ```bash
-conda activate nanoGPT
+conda activate nanogpt
 python -m pip check
 python -m pytest -q emulator_bridge/test_bridge.py emulator_bridge/test_carc.py
 python -m cobaya run emulator_bridge/configs/planck_evaluate.yaml
