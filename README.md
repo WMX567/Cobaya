@@ -9,7 +9,11 @@ cd /scratch1/mengxiwu/Cobaya
 bash emulator_bridge/create_env_carc.sh
 ```
 
-If setup is interrupted, rerun with `--resume`.
+This installs the Python requirements and serial PolyChord. If interrupted:
+
+```bash
+bash emulator_bridge/create_env_carc.sh --resume
+```
 
 ## 2. Activate the environment and set paths
 
@@ -30,9 +34,23 @@ Each spectrum folder must contain `0_3000/best.pt`, `3000_6000/best.pt`, and
 `6000_9000/best.pt`. Keep the Emulator project at `../Emulator`, or set
 `EMULATOR_DIR` to its absolute path.
 
-## 3. Install likelihood data once
+## 3. Verify dependencies and install data
+
+If dependencies are missing, install the complete requirements in the active
+environment:
 
 ```bash
+python -m pip install -r emulator_bridge/requirements.txt
+python -m pip check
+python -c "import yaml, numpy, scipy, pandas, getdist, portalocker, torch, act_dr6_cmbonly, cobaya; print('Imports OK')"
+```
+
+Verify PolyChord and install likelihood data:
+
+```bash
+export COBAYA_NOMPI=1
+python -m cobaya install polychord \
+  -p "$PWD/emulator_bridge/packages" --no-set-global --test
 bash emulator_bridge/install_data_carc.sh
 ```
 

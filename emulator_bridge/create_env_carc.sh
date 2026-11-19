@@ -73,8 +73,10 @@ set -u
 "$COBAYA_PYTHON" -c 'import sys, datetime, _datetime, numpy; print(sys.executable); print("NumPy:", numpy.__version__)'
 # CPU inference only: avoid downloading CUDA libraries.
 "$COBAYA_PYTHON" -m pip install 'torch>=2.6' --index-url https://download.pytorch.org/whl/cpu
-"$COBAYA_PYTHON" -m pip install -r emulator_bridge/requirements.txt
+echo "Installing all project requirements with $COBAYA_PYTHON"
+"$COBAYA_PYTHON" -m pip install -r "$COBAYA_DIR/emulator_bridge/requirements.txt"
 "$COBAYA_PYTHON" -m pip check
+"$COBAYA_PYTHON" -c 'import yaml, numpy, scipy, pandas, getdist, portalocker, torch, act_dr6_cmbonly, cobaya; print("Project dependency imports verified")'
 bash emulator_bridge/install_polychord_carc.sh
 
 echo "Setup complete. Existing models and likelihood data have not been changed."
