@@ -49,16 +49,38 @@ install_polychord() {
     "$ENV_PYTHON" --version
     echo "Packages: $PACKAGES"
     echo "Log: $LOG"
-    # Check the compiler wrappers used by Cobaya's PolyChord build.
-    for compiler in make "${CC:-mpicc}" "${CXX:-mpicxx}"; do
+    # Conda/modules may export FC=gfortran. MPI builds require wrappers instead.
+    export CC="${POLYCHORD_CC:-mpicc}"
+    export CXX="${POLYCHORD_CXX:-mpicxx}"
+    if [[ -n "${POLYCHORD_FC:-}" ]]; then
+        export FC="$POLYCHORD_FC"
+    elif command -v mpif90 >/dev/null 2>&1; then
+        export FC=mpif90
+    else
+        export FC=mpifort
+    fi
+    for compiler in make "$CC" "$CXX" "$FC"; do
         if ! command -v "$compiler"; then
             echo "Missing $compiler. Load compatible compiler and MPI modules, then retry." >&2
             echo "Discover available modules with: module avail gcc; module avail openmpi" >&2
             return 2
         fi
     done
-    if ! command -v "${FC:-mpif90}"; then
-        echo "Missing ${FC:-mpif90}. Load an MPI module with a Fortran compiler, or set FC to its wrapper." >&2
+    echo "Build compilers: CC=$CC CXX=$CXX FC=$FC"
+    # Compile and link without launching an MPI process on the login node.
+    local probe_dir
+    probe_dir="$(mktemp -d "${TMPDIR:-/tmp}/polychord-mpi.XXXXXX")" || return 2
+    cat > "$probe_dir/check.f90" <<'EOF'
+program check_mpi
+  implicit none
+  include 'mpif.h'
+  integer ierr
+  call MPI_Init(ierr)
+  call MPI_Finalize(ierr)
+end program check_mpi
+EOF
+    if ! "$FC" "$probe_dir/check.f90" -o "$probe_dir/check_mpi"; then
+        echo "MPI Fortran compile/link check failed. Load compatible GCC and MPI modules, then retry." >&2
         return 2
     fi
     "$ENV_PYTHON" -u -m cobaya install polychord \
