@@ -64,8 +64,10 @@ install_polychord() {
     "$ENV_PYTHON" -u - "$PACKAGES" <<'PYBUILD'
 import os
 from pathlib import Path
+import shutil
 import subprocess
 import sys
+import tempfile
 
 from cobaya.install import download_github_release
 from cobaya.log import logger_setup
@@ -79,10 +81,24 @@ if not download_github_release(str(packages / "code"),
                                polychord._pc_repo_name, polychord._pc_repo_version):
     raise SystemExit("PolyChord download failed")
 env = dict(os.environ, PWD=str(source))
-subprocess.check_call([sys.executable, "setup.py", "--no-mpi", "clean", "--all"],
-                      cwd=source, env=env)
-subprocess.check_call([sys.executable, "setup.py", "--no-mpi", "build"],
-                      cwd=source, env=env)
+# PolyChord detects GNU compilers by looking for the unprefixed gfortran name.
+# Conda's actual compiler names may be x86_64-conda-linux-gnu-*.
+with tempfile.TemporaryDirectory(prefix="polychord-compilers-") as wrappers:
+    for alias, variable in (("gcc", "CC"), ("g++", "CXX"), ("gfortran", "FC")):
+        compiler = shutil.which(env[variable])
+        if compiler is None:
+            raise SystemExit(f"Compiler not found: {env[variable]}")
+        env[variable] = str(Path(compiler).absolute())
+        # Use a shell wrapper so GCC still locates its own toolchain correctly.
+        import shlex
+        wrapper = Path(wrappers) / alias
+        wrapper.write_text("#!/bin/sh\nexec " + shlex.quote(env[variable]) + ' "$@"\n')
+        wrapper.chmod(0o755)
+    env["PATH"] = wrappers + os.pathsep + env["PATH"]
+    subprocess.check_call([sys.executable, "setup.py", "--no-mpi", "clean", "--all"],
+                          cwd=source, env=env)
+    subprocess.check_call([sys.executable, "setup.py", "--no-mpi", "build"],
+                          cwd=source, env=env)
 PYBUILD
     local build_status=$?
     if [[ "$build_status" != 0 ]]; then return "$build_status"; fi

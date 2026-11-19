@@ -5,6 +5,21 @@ likelihoods. Run all commands from this repository root.
 
 ## Setup
 
+To create a separate environment with matching compilers and serial PolyChord:
+
+```bash
+bash emulator_bridge/create_env_carc.sh
+# After setup, select the new environment before submitting jobs:
+unset LD_PRELOAD
+conda activate cobaya-emulator
+export COBAYA_CONDA_ENV=cobaya-emulator
+export COBAYA_PYTHON="$CONDA_PREFIX/bin/python"
+```
+
+This preserves `nanogpt`. Use `--resume` to continue an interrupted setup.
+It installs Python dependencies and PolyChord; existing model/data paths are
+reused. Install missing likelihood data using the command below.
+
 Use your existing conda environment:
 
 ```bash
